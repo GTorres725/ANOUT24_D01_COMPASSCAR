@@ -15,7 +15,7 @@ exports.up = function(knex) {
         .createTable('cars_items', (t)=> {
             t.increments('id').primary();
             t.string('name').notNullable();
-            t.integer('car_id').notNullable().references('id').inTable('cars');
+            t.integer('car_id').unsigned().notNullable().references('id').inTable('cars');
             t.datetime('created_At').defaultTo(knex.fn.now());
         })
 };
