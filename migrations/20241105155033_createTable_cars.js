@@ -10,13 +10,13 @@ exports.up = function(knex) {
             t.string('model').notNullable();
             t.string('plate').notNullable().unique();
             t.integer('year').notNullable();
-            t.datetime('created_At').defaultTo(knex.fn.now());
+            t.datetime('created_at').defaultTo(knex.fn.now());
         })
         .createTable('cars_items', (t)=> {
             t.increments('id').primary();
             t.string('name').notNullable();
             t.integer('car_id').unsigned().notNullable().references('id').inTable('cars');
-            t.datetime('created_At').defaultTo(knex.fn.now());
+            t.datetime('created_at').defaultTo(knex.fn.now());
         })
 };
 
