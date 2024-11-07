@@ -96,9 +96,26 @@ exports.get_allCar = async (req, res)=> {
     }
 };
 
-exports.get_car = async (req, res)=> {
+//
 
+exports.get_car = async (req, res)=> {
+    const { id } = req.params;
+
+    const carVerification = await db('cars').where('id', '=', id);
+    if(carVerification.length == 0) return res.status(404).json({ error: 'car not found' });
+
+    const car = await db('cars').select('*').where('id', '=', id);
+    const car_items = await db('cars_items').select('name').where('car_id', '=', id)
+    const itemsName = car_items.map((i) => {
+        return i.name;
+    })
+    
+    car[0].items = itemsName; //Quebrei a cabeça aqui com a lógica do knex de sempre vir um array kkk Talvez tenha sido apenas a mente cansada. Comentário apenas para me lebrar desse dia quando eu verificar novamente esse código.
+
+    res.send(car[0]);
 };
+ 
+//
 
 exports.update_put_car = async (req, res)=> {
     const { id } = req.params;
@@ -125,7 +142,7 @@ exports.update_put_car = async (req, res)=> {
         await db('cars_items').insert(formatedItems);
         res.status(204).send();
     } catch (error) {
-        res.status(500).json({ error: 'Internal error' })
+        res.status(500).json({ error: 'Internal error' });
     }
 };
 
