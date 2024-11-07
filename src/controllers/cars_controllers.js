@@ -70,18 +70,30 @@ exports.add_car = async (req, res)=> {
         const [id] = await db('cars').insert({ brand, model, year, plate });
         res.status(201).json({ id, brand, model, year, plate, created_at})
     } catch (error) {
-        console.log(error);
-        
         res.status(500).json({ error: 'Internal error' })
-
     }
-
 };
 
 //
 
 exports.get_allCar = async (req, res)=> {
-    res.status(200).send('runningCar')
+    const { year, final_plate, brand, page, limit} = req.params;
+
+    try {
+        let getCars = kenx('cars');
+
+        if(year) getCars = getCars.where('year', '>=', year);
+        
+        if(final_plate) getCars = getCars.where('plate', 'LIKE', `%${final_plate}`);
+
+        if(brand) getCars = getCars.where('brand', 'LIKE', `%${brand}`);
+
+        const cars = await getCars.select()
+
+        res.status(200).json({cars})
+    } catch (error) {
+        
+    }
 };
 
 exports.get_car = async (req, res)=> {
@@ -89,7 +101,32 @@ exports.get_car = async (req, res)=> {
 };
 
 exports.update_put_car = async (req, res)=> {
+    const { id } = req.params;
+    const items = req.body;
 
+    const idCar = await db('cars').where('id', '=', id)
+    if(idCar.length == 0) return res.status(404).json({ error: 'car not found' })
+
+    if(items.length == 0) return res.status(400).json({ error: 'items is required' });
+
+    if(items.length > 5) return res.status(400).json({ error: 'items must be a maximum of 5' });
+
+    const duplicateItems = new Set()
+    items.forEach(i => {
+        duplicateItems.add(i)
+    });
+    if(items.length != duplicateItems.size) return res.status(400).json({ error: 'items cannot be repeat' });
+
+    const formatedItems = items.map((i) => {
+        return {name: i, car_id: id}
+    });
+    
+    try {
+        await db('cars_items').insert(formatedItems);
+        res.status(204).send();
+    } catch (error) {
+        res.status(500).json({ error: 'Internal error' })
+    }
 };
 
 exports.update_patch_car = async (req, res)=> {
