@@ -66,13 +66,15 @@ exports.add_car = async (req, res)=> {
      
      checkPlate();
 
+     let created_at = new Date();
+
     try {
         const duplicateCar = await db('cars').where({ plate });
         if(duplicateCar.length > 0) {
             return res.status(409).json({ 'errors': ["car already registered"] })
         }
         const [id] = await db('cars').insert({ brand, model, year, plate });
-        res.status(201).json({ id, brand, model, year, plate, created_at})
+        return res.status(201).json({ id, brand, model, year, plate, created_at })
     } catch (error) {
         res.status(500).json({ 'errors': ["an internal server error ocurred"] })
     }
@@ -81,7 +83,10 @@ exports.add_car = async (req, res)=> {
 //
 
 exports.get_allCar = async (req, res)=> {
-    const { year, final_plate, brand, page, limit} = req.params;
+    let { year, final_plate, brand, page, limit} = req.query;
+
+        if(page == undefined || +page == 0) page = 1; //Define qual pag vai puxar, não a qtd de pag
+        if(limit == undefined || +limit == 0) limit = 5; 
 
         let getCars = db('cars');
 
@@ -91,7 +96,29 @@ exports.get_allCar = async (req, res)=> {
 
         if(brand) getCars = getCars.where('brand', 'LIKE', `%${brand}%`);
 
+        let count = await getCars.clone().count('* as total');
+        count = count[0].total;
+        let totalPages = Math.ceil(count / limit); //Define a qtd de pag
+        const offset = (page - 1) * limit;
 
+        try {
+            const responseCars = await getCars.select('*').limit(limit).offset(offset)
+
+            if(responseCars.length > 0) {
+                res.status(200).json({ 
+                    'count': count,
+                    'pages': totalPages,
+                    'data': [
+                        responseCars
+                    ]
+                 });
+            } else {
+                res.status(200).json({ 'count': 0, 'pages': 0, 'data': [] })
+            }
+
+        } catch (error) {
+            res.status(500).json({ 'errors': ["an internal server error ocurred"] })
+        }
 };
 
 //
@@ -140,7 +167,7 @@ exports.update_put_car = async (req, res)=> {
         await db('cars_items').insert(formatedItems);
         res.status(204).send();
     } catch (error) {
-        res.status(500).json({ 'errors': ["an internal server error ocurred"] });
+        res.status(500).json({ 'errors': ["an internal serer error ocurred"] });v
     }
 };
 
