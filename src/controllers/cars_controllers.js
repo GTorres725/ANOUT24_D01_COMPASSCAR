@@ -2,16 +2,16 @@ const db = require ('./../database');
 
 exports.add_car = async (req, res)=> {
     const {brand, model, year, plate} = req.body;
-    if(!brand) res.status(400).json({ error: 'brand is required' });
-    if(!model) res.status(400).json({ error: 'model is required' });
-    if(!year) res.status(400).json({ error: 'year is required' });
-    if(!plate) res.status(400).json({ error: 'plate is required' });
+    if(!brand) res.status(400).json({ 'errors': ["brand is required"] });
+    if(!model) res.status(400).json({ 'errors': ["model is required"] });
+    if(!year) res.status(400).json({ 'errors': ["year is required"] });
+    if(!plate) res.status(400).json({ 'errors': ["plate is required"] });
 
     yearVerification = ()=> {
         let currentYear = new Date().getFullYear();
-        if(isNaN(+year)) return res.status(400).json({ error: `year must be between ${currentYear -9} and ${currentYear +1}` })
+        if(isNaN(+year)) return res.status(400).json({ 'errors': [`year must be between ${currentYear -9} and ${currentYear +1}`] })
         if(+year < (currentYear -9) || +year > (currentYear +1)) {
-            return res.status(400).json({ error: `year must be between ${currentYear -9} and ${currentYear +1}` });
+            return res.status(400).json({ 'errors': [`year must be between ${currentYear -9} and ${currentYear +1}`] });
         };
     }
 
@@ -35,16 +35,16 @@ exports.add_car = async (req, res)=> {
                      }
                  });
              } catch {
-                return res.status(400).json({ error: 'plate must be in the correct format ABC-1C34' })
+                return res.status(400).json({ 'errors': ["plate must be in the correct format ABC-1C34"] })
              }
              
              if (fourthChar != '-') {
-                return res.status(400).json({ error: 'plate must be in the correct format ABC-1C34' })
+                return res.status(400).json({ 'errors': ["plate must be in the correct format ABC-1C34"] })
              }
      
              if((sixthChar >= '0' && sixthChar <= '9') || (sixthChar >= 'A' && sixthChar <= 'J')) {
              } else {
-                return res.status(400).json({ error: 'plate must be in the correct format ABC-1C34' })
+                return res.status(400).json({ 'errors': ["plate must be in the correct format ABC-1C34"] })
              }
      
              try {
@@ -56,11 +56,11 @@ exports.add_car = async (req, res)=> {
                      }
                  })
              } catch {
-               return res.status(400).json({ error: 'plate must be in the correct format ABC-1C34' });
+               return res.status(400).json({ 'errors': ["plate must be in the correct format ABC-1C34"] });
              }
              
         } else {
-            res.status(400).json({ error: 'plate must be in the correct format ABC-1C34' })
+            res.status(400).json({ 'errors': ["plate must be in the correct format ABC-1C34"] })
         } 
      }
      
@@ -69,12 +69,12 @@ exports.add_car = async (req, res)=> {
     try {
         const duplicateCar = await db('cars').where({ plate });
         if(duplicateCar.length > 0) {
-            return res.status(409).json({ error: 'car already registered' })
+            return res.status(409).json({ 'errors': ["car already registered"] })
         }
         const [id] = await db('cars').insert({ brand, model, year, plate });
         res.status(201).json({ id, brand, model, year, plate, created_at})
     } catch (error) {
-        res.status(500).json({ error: 'Internal error' })
+        res.status(500).json({ 'errors': ["an internal server error ocurred"] })
     }
 };
 
@@ -100,7 +100,7 @@ exports.get_car = async (req, res)=> {
     const { id } = req.params;
 
     const carVerification = await db('cars').where('id', '=', id);
-    if(carVerification.length == 0) return res.status(404).json({ error: 'car not found' });
+    if(carVerification.length == 0) return res.status(404).json({ 'errors': ["car not found"] });
 
     const car = await db('cars').select('*').where('id', '=', id);
     const car_items = await db('cars_items').select('name').where('car_id', '=', id);
@@ -120,17 +120,17 @@ exports.update_put_car = async (req, res)=> {
     const items = req.body;
 
     const idCar = await db('cars').where('id', '=', id)
-    if(idCar.length == 0) return res.status(404).json({ error: 'car not found' });
+    if(idCar.length == 0) return res.status(404).json({ 'errors': ["car not found"] });
 
-    if(items.length == 0) return res.status(400).json({ error: 'items is required' });
+    if(items.length == 0) return res.status(400).json({ 'errors': ["items is required"] });
 
-    if(items.length > 5) return res.status(400).json({ error: 'items must be a maximum of 5' });
+    if(items.length > 5) return res.status(400).json({ 'errors': ["items must be a maximum of 5"] });
 
     const duplicateItems = new Set()
     items.forEach(i => {
         duplicateItems.add(i)
     });
-    if(items.length != duplicateItems.size) return res.status(400).json({ error: 'items cannot be repeat' });
+    if(items.length != duplicateItems.size) return res.status(400).json({ 'errors': ["items cannot be repeat"] });
 
     const formatedItems = items.map((i) => {
         return {name: i, car_id: id}
@@ -140,7 +140,7 @@ exports.update_put_car = async (req, res)=> {
         await db('cars_items').insert(formatedItems);
         res.status(204).send();
     } catch (error) {
-        res.status(500).json({ error: 'Internal error' });
+        res.status(500).json({ 'errors': ["an internal server error ocurred"] });
     }
 };
 
@@ -151,7 +151,7 @@ exports.update_patch_car = async (req, res)=> {
     let { brand, model, year, plate } = req.body;
 
     const idCar = await db('cars').where('id', '=', id)
-    if(idCar.length == 0) return res.status(404).json({ error: 'car not found' });
+    if(idCar.length == 0) return res.status(404).json({ 'errors': ["car not found"] });
 
     if(brand == '') brand = undefined;
     if(year == '') year = undefined;
@@ -159,16 +159,16 @@ exports.update_patch_car = async (req, res)=> {
 
     if(plate) {
         const duplicateCar = await db('cars').where({ plate });
-        if(duplicateCar.length > 0) return res.status(409).json({ error: 'car already registered' });
+        if(duplicateCar.length > 0) return res.status(409).json({ 'errors': ["car already registered"] });
     }
 
-    if(brand && !model) return res.status(400).json({ error: 'model must also be informed' })
+    if(brand && !model) return res.status(400).json({ 'errors': ["model must also be informed"] })
 
     yearVerification = ()=> {
         let currentYear = new Date().getFullYear();
-        if(isNaN(+year)) return res.status(400).json({ error: `year must be between ${currentYear -9} and ${currentYear +1}` })
+        if(isNaN(+year)) return res.status(400).json({ 'errors': [`year must be between ${currentYear -9} and ${currentYear +1}`] })
         if(+year < (currentYear -9) || +year > (currentYear +1)) {
-            return res.status(400).json({ error: `year must be between ${currentYear -9} and ${currentYear +1}` });
+            return res.status(400).json({ 'errors': [`year must be between ${currentYear -9} and ${currentYear +1}`] });
         };
     }
     if(year != undefined) yearVerification();
@@ -191,16 +191,16 @@ exports.update_patch_car = async (req, res)=> {
                      }
                  });
              } catch {
-                return res.status(400).json({ error: 'plate must be in the correct format ABC-1C34' })
+                return res.status(400).json({ 'errors': ["plate must be in the correct format ABC-1C34"] })
              }
              
              if (fourthChar != '-') {
-                return res.status(400).json({ error: 'plate must be in the correct format ABC-1C34' })
+                return res.status(400).json({ 'errors': ["plate must be in the correct format ABC-1C34"] })
              }
      
              if((sixthChar >= '0' && sixthChar <= '9') || (sixthChar >= 'A' && sixthChar <= 'J')) {
              } else {
-                return res.status(400).json({ error: 'plate must be in the correct format ABC-1C34' })
+                return res.status(400).json({ 'errors': ["plate must be in the correct format ABC-1C34"] })
              }
      
              try {
@@ -212,11 +212,11 @@ exports.update_patch_car = async (req, res)=> {
                      }
                  })
              } catch {
-               return res.status(400).json({ error: 'plate must be in the correct format ABC-1C34' });
+               return res.status(400).json({ 'errors': ["plate must be in the correct format ABC-1C34"] });
              }
              
         } else {
-            res.status(400).json({ error: 'plate must be in the correct format ABC-1C34' })
+            res.status(400).json({ 'errors': ["plate must be in the correct format ABC-1C34"] })
         } 
      }
      if(plate != undefined) checkPlate();
@@ -225,9 +225,7 @@ exports.update_patch_car = async (req, res)=> {
         await db('cars').update({ brand, model, year, plate }).where({ id });
         res.status(204).send()
      } catch (error) {
-        console.log(error);
-        
-        res.status(500).json({ error: 'Internal error' })
+        res.status(500).json({ 'errors': ["an internal server error ocurred"] })
      }
 };
 
