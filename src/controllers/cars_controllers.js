@@ -83,21 +83,15 @@ exports.add_car = async (req, res)=> {
 exports.get_allCar = async (req, res)=> {
     const { year, final_plate, brand, page, limit} = req.params;
 
-    try {
         let getCars = db('cars');
 
         if(year) getCars = getCars.where('year', '>=', year);
         
         if(final_plate) getCars = getCars.where('plate', 'LIKE', `%${final_plate}`);
 
-        if(brand) getCars = getCars.where('brand', 'LIKE', `%${brand}`);
+        if(brand) getCars = getCars.where('brand', 'LIKE', `%${brand}%`);
 
-        const cars = await getCars.select();
 
-        res.status(200).json({cars})
-    } catch (error) {
-        
-    }
 };
 
 //
@@ -240,5 +234,15 @@ exports.update_patch_car = async (req, res)=> {
 //
 
 exports.del_car = async (req, res)=> {
+    const { id } = req.params;
 
+    const carVerification = await db('cars').where('id', '=', id);
+    if(carVerification.length == 0) return res.status(404).json({ 'errors': ["car not found"] });
+
+    try {
+        await db('cars').where({ id }).del();
+        res.status(204).send();
+    } catch (error) {
+        res.status(500).json({ 'errors': ["an internal server error ocurred"] });
+    }
 };
