@@ -144,7 +144,7 @@ exports.get_car = async (req, res)=> {
 
 exports.update_put_car = async (req, res)=> {
     const { id } = req.params;
-    const items = req.body;
+    let items = req.body.items;
 
     const idCar = await db('cars').where('id', '=', id)
     if(idCar.length == 0) return res.status(404).json({ 'errors': ["car not found"] });
@@ -167,7 +167,7 @@ exports.update_put_car = async (req, res)=> {
         await db('cars_items').insert(formatedItems);
         res.status(204).send();
     } catch (error) {
-        res.status(500).json({ 'errors': ["an internal serer error ocurred"] });v
+        res.status(500).json({ 'errors': ["an internal serer error ocurred"] });
     }
 };
 
