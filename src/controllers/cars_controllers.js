@@ -265,6 +265,7 @@ exports.del_car = async (req, res)=> {
     if(carVerification.length == 0) return res.status(404).json({ 'errors': ["car not found"] });
 
     try {
+        await db('cars_items').where('car_id', '=', id).del();
         await db('cars').where({ id }).del();
         res.status(204).send();
     } catch (error) {
